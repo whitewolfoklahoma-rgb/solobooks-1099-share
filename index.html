@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoloBooks 1099 — Schedule C Income & Expense Tracker</title>
+<style>
+  :root{
+    --ink:#1d2b26; --muted:#5c6f68; --brand:#14694f; --brand2:#0e4d39;
+    --bg:#f3f6f4; --card:#ffffff; --line:#d9e2dc; --accent:#e8f3ee;
+    --warn:#9a3412; --warnbg:#fdf0e7; --bad:#b3261e; --good:#14694f;
+  }
+  html{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}
+  header{background:var(--brand2);color:#fff;padding:14px 16px}
+  header .wrap{max-width:1020px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+  header h1{font-size:20px;margin:0}
+  header .sub{font-size:12.5px;opacity:.85;margin-top:2px}
+  .yearbox{display:flex;align-items:center;gap:8px;font-size:14px}
+  .yearbox select{font-size:15px;padding:6px 8px;border-radius:6px;border:1px solid var(--line)}
+  nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  nav .wrap{max-width:1020px;margin:0 auto;display:flex;flex-wrap:wrap;gap:2px;padding:6px 8px}
+  nav button{background:none;border:none;padding:9px 12px;font-size:14.5px;cursor:pointer;border-radius:6px;color:var(--ink)}
+  nav button.active{background:var(--accent);color:var(--brand2);font-weight:600}
+  main{max-width:1020px;margin:0 auto;padding:16px 12px 60px}
+  .tab{display:none}
+  .tab.active{display:block}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .card .lbl{font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .card .val{font-size:24px;font-weight:700;margin-top:4px}
+  .card .note{font-size:12.5px;color:var(--muted);margin-top:4px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+  .panel h2{margin:0 0 10px;font-size:17px}
+  .panel h3{margin:16px 0 8px;font-size:15px}
+  form.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+  input,select,textarea{width:100%;box-sizing:border-box;padding:8px 9px;border:1px solid var(--line);border-radius:6px;font-size:14.5px;background:#fff;color:var(--ink)}
+  textarea{min-height:64px}
+  .btn{background:var(--brand);color:#fff;border:none;padding:9px 16px;border-radius:6px;font-size:14.5px;cursor:pointer}
+  .btn:hover{background:var(--brand2)}
+  .btn.ghost{background:#fff;color:var(--brand2);border:1px solid var(--brand)}
+  .btn.danger{background:#fff;color:var(--bad);border:1px solid var(--bad)}
+  .btn.small{padding:4px 9px;font-size:13px;min-height:40px;}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr.total td{font-weight:700;border-top:2px solid var(--ink);border-bottom:none}
+  .msg{font-size:13.5px;margin-top:8px;min-height:18px}
+  .msg.err{color:var(--bad)}
+  .msg.ok{color:var(--good)}
+  .flag{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:9px;background:var(--accent);color:var(--brand2)}
+  .flag.due{background:var(--warnbg);color:var(--warn)}
+  .flag.over{background:#fbe9e7;color:var(--bad)}
+  .disclaimer{background:var(--warnbg);border:1px solid #f0c9ae;border-radius:8px;padding:10px 12px;font-size:13.5px;color:#6b3410}
+  .muted{color:var(--muted);font-size:13px}
+  .rowflex{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .spacer{flex:1}
+  #printSheet{display:none}
+  @media (max-width:640px){
+    .panel{overflow-x:auto}
+    header h1{font-size:17px}
+    .card .val{font-size:20px}
+    th,td{padding:6px 5px;font-size:13px}
+    nav button{padding:8px 9px;font-size:13.5px}
+  }
+  @media print{
+    header,nav,main{display:none !important}
+    #printSheet{display:block !important;font-size:13px;color:#000}
+    #printSheet h1{font-size:19px;margin:0 0 4px}
+    #printSheet h2{font-size:15px;margin:18px 0 6px}
+    #printSheet table{width:100%;border-collapse:collapse}
+    #printSheet th,#printSheet td{border-bottom:1px solid #bbb;padding:5px 6px;text-align:left}
+    #printSheet td.num,#printSheet th.num{text-align:right}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div>
+      <h1>📗 SoloBooks 1099</h1>
+      <div class="sub">Schedule C income &amp; expense tracker for freelancers &amp; gig workers — offline, no bank login, ever.</div>
+    </div>
+    <div class="yearbox">
+      <label for="yearSel" style="color:#cfe6db;margin:0">Tax year</label>
+      <select id="yearSel"></select>
+    </div>
+  </div>
+</header>
+<div style="text-align:center;padding:12px 16px;background:#fff8e6;border-bottom:2px solid #e8a13a;"><a href="https://travisbriggs.gumroad.com/l/ugtipg" target="_blank" rel="noopener" style="display:inline-block;background:#e8a13a;color:#1d2b2e;font-weight:800;font-size:17px;padding:10px 22px;border-radius:8px;text-decoration:none;">Get the full version — $49</a></div>
+
+<nav>
+  <div class="wrap" id="tabBar">
+    <button data-tab="dashboard" class="active">Dashboard</button>
+    <button data-tab="income">Income</button>
+    <button data-tab="expenses">Expenses</button>
+    <button data-tab="mileage">Mileage</button>
+    <button data-tab="tax">Quarterly Tax</button>
+    <button data-tab="report">Schedule C</button>
+    <button data-tab="settings">Settings &amp; Backup</button>
+    <button data-tab="help">Help</button>
+  </div>
+</nav>
+<main id="app">
+
+  <!-- ============ DASHBOARD ============ -->
+  <section class="tab active" id="tab-dashboard">
+    <div class="cards">
+      <div class="card"><div class="lbl">Income (YTD)</div><div class="val" id="dashIncome">$0.00</div><div class="note" id="dashIncomeNote"></div></div>
+      <div class="card"><div class="lbl">Deductible expenses</div><div class="val" id="dashExpenses">$0.00</div><div class="note">After the meals 50% limit; includes mileage below</div></div>
+      <div class="card"><div class="lbl">Mileage deduction</div><div class="val" id="dashMileageDed">$0.00</div><div class="note" id="dashMileageNote"></div></div>
+      <div class="card"><div class="lbl">Net profit</div><div class="val" id="dashProfit">$0.00</div><div class="note">Income − deductible expenses − mileage</div></div>
+      <div class="card"><div class="lbl">Next estimated payment</div><div class="val" id="dashEstDue" style="font-size:19px">—</div><div class="note" id="dashEstNote">Planning estimate only — see Quarterly Tax tab</div></div>
+    </div>
+    <div class="panel">
+      <h2>Getting around</h2>
+      <p style="margin:6px 0">Log money in the <b>Income</b>, <b>Expenses</b>, and <b>Mileage</b> tabs as it happens. The <b>Quarterly Tax</b> tab turns your year-to-date profit into suggested 1040-ES payments with due dates, and the <b>Schedule C</b> tab builds the year-end summary you hand your tax preparer.</p>
+      <p class="muted" style="margin:6px 0">A sample freelance designer's books are pre-loaded so you can see how everything works. Your real entries are never mixed up with them — samples are marked, and one button removes only the samples.</p>
+      <div class="rowflex">
+        <button class="btn ghost" id="btnClearDemoDash" type="button">Clear sample data</button>
+        <span class="msg" id="dashMsg"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INCOME ============ -->
+  <section class="tab" id="tab-income">
+    <div class="panel">
+      <h2>Add income</h2>
+      <form class="grid" id="incForm">
+        <div><label for="incDate">Date</label><input type="date" id="incDate"></div>
+        <div><label for="incPayer">Client / payer</label><input type="text" id="incPayer" placeholder="e.g. Bluebird Coffee Co."></div>
+        <div><label for="incAmount">Amount ($)</label><input inputmode="decimal" type="number" id="incAmount" step="0.01" min="0" placeholder="0.00"></div>
+        <div><label for="inc1099">Form 1099-NEC</label>
+          <select id="inc1099">
+            <option value="expected">Expected</option>
+            <option value="received">Received</option>
+            <option value="na">Not applicable</option>
+          </select></div>
+        <div><label for="incNotes">Notes</label><input type="text" id="incNotes" placeholder="Invoice #, project…"></div>
+        <div><button class="btn" id="incAdd" type="submit">Add income</button></div>
+      </form>
+      <div class="msg" id="incMsg"></div>
+    </div>
+    <div class="panel">
+      <h2>Income entries — <span class="yrLabel"></span></h2>
+      <table><thead><tr><th>Date</th><th>Client / payer</th><th>1099-NEC</th><th>Notes</th><th class="num">Amount</th><th></th></tr></thead>
+      <tbody id="incList"></tbody>
+      <tfoot><tr class="total"><td colspan="4">Total income</td><td class="num" id="incTotal">$0.00</td><td></td></tr></tfoot></table>
+    </div>
+    <div class="panel">
+      <h2>Income by client</h2>
+      <table><thead><tr><th>Client / payer</th><th class="num">Payments</th><th class="num">Total</th><th>1099-NEC status</th></tr></thead>
+      <tbody id="incByClient"></tbody></table>
+      <h3>Income by month</h3>
+      <table><thead><tr><th>Month</th><th class="num">Total</th></tr></thead>
+      <tbody id="incByMonth"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ============ EXPENSES ============ -->
+  <section class="tab" id="tab-expenses">
+    <div class="panel">
+      <h2>Add expense</h2>
+      <form class="grid" id="expForm">
+        <div><label for="expDate">Date</label><input type="date" id="expDate"></div>
+        <div><label for="expCat">Schedule C category</label><select id="expCat"></select></div>
+        <div><label for="expVendor">Vendor / payee</label><input type="text" id="expVendor" placeholder="e.g. Art Supply Co."></div>
+        <div><label for="expAmount">Amount ($)</label><input inputmode="decimal" type="number" id="expAmount" step="0.01" min="0" placeholder="0.00"></div>
+        <div><label for="expRepeat">Repeat monthly</label>
+          <select id="expRepeat"><option value="1">Just once</option><option value="2">× 2 months</option><option value="3">× 3 months</option><option value="6">× 6 months</option><option value="12">× 12 months</option></select></div>
+        <div><label for="expNotes">Notes</label><input type="text" id="expNotes" placeholder="What was it for?"></div>
+        <div><button class="btn" id="expAdd" type="submit">Add expense</button></div>
+      </form>
+      <div class="msg" id="expMsg"></div>
+      <p class="muted">"Repeat monthly" is quick entry for subscriptions and rent: it creates one entry per month starting on the date above. <b>Meals</b> are flagged automatically — only 50% counts as deductible, and both numbers are shown everywhere.</p>
+    </div>
+    <div class="panel">
+      <h2>Expense entries — <span class="yrLabel"></span></h2>
+      <table><thead><tr><th>Date</th><th>Category</th><th>Vendor</th><th>Notes</th><th class="num">Paid</th><th class="num">Deductible</th><th></th></tr></thead>
+      <tbody id="expList"></tbody>
+      <tfoot><tr class="total"><td colspan="4">Totals</td><td class="num" id="expTotalGross">$0.00</td><td class="num" id="expTotalDed">$0.00</td><td></td></tr></tfoot></table>
+    </div>
+    <div class="panel">
+      <h2>Expenses by Schedule C line</h2>
+      <table><thead><tr><th>Line</th><th>Category</th><th class="num">Paid</th><th class="num">Deductible</th></tr></thead>
+      <tbody id="expByCat"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ============ MILEAGE ============ -->
+  <section class="tab" id="tab-mileage">
+    <div class="panel">
+      <h2>Add a business trip</h2>
+      <form class="grid" id="milForm">
+        <div><label for="milDate">Date</label><input type="date" id="milDate"></div>
+        <div><label for="milMiles">Miles driven</label><input inputmode="decimal" type="number" id="milMiles" step="0.1" min="0" placeholder="0"></div>
+        <div><label for="milPurpose">Purpose / destination</label><input type="text" id="milPurpose" placeholder="e.g. Client meeting — downtown"></div>
+        <div><button class="btn" id="milAdd" type="submit">Add trip</button></div>
+      </form>
+      <div class="msg" id="milMsg"></div>
+      <p class="muted" id="milRateInfo"></p>
+    </div>
+    <div class="panel">
+      <h2>Trips — <span class="yrLabel"></span></h2>
+      <table><thead><tr><th>Date</th><th>Purpose</th><th class="num">Miles</th><th class="num">Deduction</th><th></th></tr></thead>
+      <tbody id="milList"></tbody>
+      <tfoot><tr class="total"><td colspan="2">Totals</td><td class="num" id="milTotalMiles">0</td><td class="num" id="milTotalDed">$0.00</td><td></td></tr></tfoot></table>
+    </div>
+  </section>
+
+  <!-- ============ QUARTERLY TAX ============ -->
+  <section class="tab" id="tab-tax">
+    <div class="disclaimer"><b>Planning estimates only — not tax advice.</b> This worksheet uses simplified math (see Help for the exact formulas and what's left out). Your real bill depends on your whole tax picture. Confirm amounts with a tax professional before paying.</div>
+    <div class="panel" style="margin-top:14px">
+      <h2>Estimated tax on <span class="yrLabel"></span> profit — "if the year ended today"</h2>
+      <table>
+        <tr><td>Year-to-date net profit</td><td class="num" id="taxProfit">$0.00</td></tr>
+        <tr><td>Self-employment tax base (profit × 92.35%)</td><td class="num" id="taxSeBase">$0.00</td></tr>
+        <tr><td>Self-employment tax (base × 15.3%)</td><td class="num" id="taxSeTax">$0.00</td></tr>
+        <tr><td>Half-SE-tax deduction (reduces income tax below)</td><td class="num" id="taxHalf">$0.00</td></tr>
+        <tr><td>Federal income tax estimate ((profit − half SE) × <span id="taxFedRateLbl">12</span>%)</td><td class="num" id="taxFed">$0.00</td></tr>
+        <tr><td>State income tax estimate (profit × <span id="taxStateRateLbl">0</span>%)</td><td class="num" id="taxState">$0.00</td></tr>
+        <tr class="total"><td>Total estimated tax for the year</td><td class="num" id="taxTotal">$0.00</td></tr>
+        <tr><td>Suggested payment per quarter (total ÷ 4)</td><td class="num" id="taxQuarterly">$0.00</td></tr>
+      </table>
+      <p class="muted">The federal and state percentages are <i>your</i> planning inputs — set them in Settings &amp; Backup. They are effective-rate guesses, not tax tables.</p>
+    </div>
+    <div class="panel">
+      <h2>Quarter-by-quarter worksheet</h2>
+      <p class="muted">Each quarter annualizes your profit through that quarter's end (profit so far × 4 ÷ quarters elapsed) and works out the cumulative share of the year's estimated tax that should be paid by that due date. Type what you've already paid in the "Paid" column.</p>
+      <table><thead><tr><th>Quarter</th><th>Due date</th><th class="num">Profit thru qtr end</th><th class="num">Annualized</th><th class="num">Cum. due</th><th class="num">Suggested this qtr</th><th class="num">Paid</th><th class="num">Balance</th></tr></thead>
+      <tbody id="taxQBody"></tbody></table>
+      <div class="rowflex" style="margin-top:12px">
+        <button class="btn ghost" id="btnPrintTax" type="button">Print worksheet</button>
+        <span class="msg" id="taxMsg"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCHEDULE C REPORT ============ -->
+  <section class="tab" id="tab-report">
+    <div class="panel">
+      <h2>Schedule C summary — <span class="yrLabel"></span></h2>
+      <p class="muted">Profit or Loss From Business (Sole Proprietorship) — the numbers your preparer copies onto the real form. Estimates from your logs; not a filed return.</p>
+      <table>
+        <tr><td>Line 1 — Gross receipts (total income)</td><td class="num" id="scGross">$0.00</td></tr>
+      </table>
+      <table><thead><tr><th>Line</th><th>Expense</th><th class="num">Deductible amount</th></tr></thead>
+      <tbody id="scLines"></tbody>
+      <tfoot>
+        <tr><td></td><td>Mileage (standard rate, inside Line 9 total above)</td><td class="num" id="scMileage">$0.00</td></tr>
+        <tr class="total"><td></td><td>Line 28 — Total expenses</td><td class="num" id="scTotalExp">$0.00</td></tr>
+        <tr class="total"><td></td><td>Line 31 — Net profit</td><td class="num" id="scNet">$0.00</td></tr>
+      </tfoot></table>
+      <p class="muted">Meals appear at their 50% deductible amount. Car &amp; truck (Line 9) combines the mileage deduction with any non-mileage car expenses you logged (parking, tolls) — don't also deduct actual gas/repairs for the same vehicle, or you'll count the car twice. See Help.</p>
+      <div class="rowflex" style="margin-top:10px">
+        <button class="btn" id="btnPrintSC" type="button">Print Schedule C summary</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>1099-NEC checklist — <span class="yrLabel"></span></h2>
+      <p class="muted">Every client who paid you $600 or more generally owes you a 1099-NEC by January 31. Use this list in January to chase missing forms.</p>
+      <table><thead><tr><th>Client / payer</th><th class="num">Paid you</th><th>Status</th></tr></thead>
+      <tbody id="scChecklist"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS & BACKUP ============ -->
+  <section class="tab" id="tab-settings">
+<div class="panel"><h3 style="margin-top:0">Legal</h3><p>Terms of Use, the applicable disclaimer, our privacy statement, and your recorded acceptance.</p><button type="button" class="btn ww-legal-open-btn" data-ww-legal="1">⚖️ Legal — Terms, Disclaimer &amp; Privacy</button></div>
+    <div class="panel">
+      <h2>Business &amp; tax settings</h2>
+      <form class="grid" id="setForm">
+        <div><label for="setBiz">Business name</label><input type="text" id="setBiz" placeholder="Your business / your name"></div>
+        <div><label for="setOwner">Owner name</label><input type="text" id="setOwner" placeholder="Your name"></div>
+        <div><label for="setFed">Federal effective rate % (planning)</label><input inputmode="decimal" type="number" id="setFed" step="0.1" min="0" max="60"></div>
+        <div><label for="setState">State effective rate % (planning)</label><input inputmode="decimal" type="number" id="setState" step="0.1" min="0" max="30"></div>
+        <div><label for="setMilFallback">Mileage rate $/mile — years not listed</label><input inputmode="decimal" type="number" id="setMilFallback" step="0.001" min="0"></div>
+        <div><button class="btn" id="setSave" type="submit">Save settings</button></div>
+      </form>
+      <div class="msg" id="setMsg"></div>
+      <h3>IRS standard mileage rates ($/mile) — editable</h3>
+      <p class="muted">These ship as <b>editable defaults</b> based on the IRS standard mileage rates in effect when this app was made. Rates change — check the current IRS notice for your tax year and fix the number here if it differs. Your deduction always uses the rate saved for the trip's year.</p>
+      <div id="milRates"></div>
+    </div>
+    <div class="panel">
+      <h2>Backup &amp; restore</h2>
+      <p class="muted">Your data lives only in this browser on this device. Export a backup file regularly — it's the only copy. Importing replaces everything currently in the app with the backup's contents.</p>
+      <div class="rowflex">
+        <button class="btn" id="btnExport" type="button">Export backup (JSON)</button>
+        <label class="btn ghost" style="cursor:pointer">Import from file<input type="file" id="importFile" accept=".json,application/json" style="display:none"></label>
+      </div>
+      <label for="importText" style="margin-top:12px">…or paste backup JSON here</label>
+      <textarea id="importText" placeholder="Paste the contents of a SoloBooks backup file"></textarea>
+      <div class="rowflex" style="margin-top:8px">
+        <button class="btn ghost" id="btnImportText" type="button">Import pasted backup</button>
+        <span class="msg" id="importMsg"></span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Sample data &amp; erase</h2>
+      <div class="rowflex">
+        <button class="btn ghost" id="btnClearDemo" type="button">Clear sample data only</button>
+        <button class="btn danger" id="btnEraseAll" type="button">Erase EVERYTHING</button>
+        <span class="msg" id="dataMsg"></span>
+      </div>
+      <p class="muted">"Erase EVERYTHING" deletes all entries and settings from this browser and starts the app empty. It cannot be undone — export a backup first if there's anything you want.</p>
+    </div>
+  </section>
+
+  <!-- ============ HELP ============ -->
+  <section class="tab" id="tab-help">
+    <div class="panel">
+      <h2>How SoloBooks 1099 works</h2>
+      <h3>The idea</h3>
+      <p>One file, no account, no subscription, no bank login — your books never leave this device. Log income, expenses, and business miles as they happen; at quarter-end the app estimates what to send the IRS; at year-end it prints a Schedule C summary your tax preparer can copy from. Manual entry is the feature: nothing connects to your bank, ever.</p>
+      <h3>Formulas used</h3>
+      <p><b>Net profit</b> = total income − deductible expenses − mileage deduction. Meals count at 50% (the standard limit for most business meals). The mileage deduction = business miles × the standard mileage rate saved for that year (Settings).</p>
+      <p><b>Self-employment tax</b> = net profit × 92.35% × 15.3%. Half of that tax is then deducted before the federal income-tax estimate: <b>federal estimate</b> = (profit − half the SE tax) × your federal effective-rate %. <b>State estimate</b> = profit × your state %. <b>Total</b> = SE tax + federal + state; each quarter's suggested payment is one quarter of the cumulative annualized total.</p>
+      <h3>What's NOT in these estimates</h3>
+      <p>This is a planning worksheet, not a tax return and not tax advice. It leaves out: the Social Security wage-base cap on part of the SE tax, the standard deduction and real tax brackets (that's why you supply an <i>effective</i> rate), other income, W-2 wages, credits, retirement-plan deductions, and state quirks. If your profit is large or your situation is mixed, a tax professional will beat this worksheet — use it to avoid surprises and underpayment penalties, not as your final number.</p>
+      <h3>Mileage vs. actual car costs</h3>
+      <p>Pick one method per vehicle per year. If you use the standard mileage rate (what this app's Mileage tab does), you may still log parking fees and tolls under "Car &amp; truck" — but not gas, repairs, or insurance for that vehicle. Logging both inflates your deduction; the IRS disallows it.</p>
+      <h3>Meals</h3>
+      <p>Most business meals are 50% deductible. Enter the full amount you paid; the app deducts half and shows both figures. Meals that are 100% deductible (e.g., office holiday parties) should be logged under "Other expenses" with a note instead.</p>
+      <h3>Your data</h3>
+      <p>Everything is stored in this browser's local storage on this device only. Clearing your browser's site data erases it — export backups from Settings &amp; Backup and keep the file somewhere safe. A backup from this app can be re-imported into any copy of SoloBooks 1099.</p>
+      <h3>Defaults to localize</h3>
+      <p>The mileage rates and tax percentages are planning defaults, clearly labeled and editable in Settings. The IRS sets the standard mileage rate per year by notice; verify yours before filing. The federal/state percentages are your own effective-rate estimates — last year's return (tax ÷ income) is a good source.</p>
+    </div>
+  </section>
+</main>
+<div id="printSheet"></div>
+
+<script>
+"use strict";
+/* ================= SoloBooks 1099 ================= */
+var KEY = "solobooks1099.v1";
+var CATS = [
+  {key:"advertising", label:"Advertising", line:"8"},
+  {key:"contract",    label:"Contract labor", line:"11"},
+  {key:"insurance",   label:"Insurance (other than health)", line:"15"},
+  {key:"office",      label:"Office expenses", line:"18"},
+  {key:"rent",        label:"Rent or lease", line:"20"},
+  {key:"repairs",     label:"Repairs & maintenance", line:"21"},
+  {key:"supplies",    label:"Supplies", line:"22"},
+  {key:"travel",      label:"Travel", line:"24a"},
+  {key:"meals",       label:"Meals (50% deductible)", line:"24b", half:true},
+  {key:"utilities",   label:"Utilities", line:"25"},
+  {key:"car",         label:"Car & truck — non-mileage (parking, tolls)", line:"9"},
+  {key:"other",       label:"Other expenses", line:"27a"}
+];
+var CATMAP = {}; CATS.forEach(function(c){ CATMAP[c.key]=c; });
+var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+var QDEFS = [
+  {q:1, endMonth:3,  due:"Apr 15"},
+  {q:2, endMonth:6,  due:"Jun 15"},
+  {q:3, endMonth:9,  due:"Sep 15"},
+  {q:4, endMonth:12, due:"Jan 15"}
+];
+
+var _uid = 0;
+function uid(){ _uid++; return "r"+Date.now().toString(36)+_uid.toString(36)+Math.floor(Math.random()*1e6).toString(36); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(ch){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]; }); }
+function round2(x){ return Math.round((Number(x)||0)*100)/100; }
+function fmt(x){ var v = round2(x); var neg = v<0; var s = Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2}); return (neg?"-$":"$")+s; }
+function num(v){ var n = parseFloat(v); if(!isFinite(n)) return 0; if(n>999999999) n=999999999; if(n<-999999999) n=-999999999; return n; }
+function amt(v){ var n = num(v); return n<0?0:n; }
+function validDate(s){
+  if(typeof s!=="string") return false;
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s); if(!m) return false;
+  var y=+m[1], mo=+m[2], d=+m[3];
+  if(mo<1||mo>12||d<1||d>31) return false;
+  var dt = new Date(Date.UTC(y, mo-1, d));
+  return dt.getUTCFullYear()===y && dt.getUTCMonth()===mo-1 && dt.getUTCDate()===d;
+}
+function yearOf(s){ return validDate(s) ? +s.slice(0,4) : null; }
+function monthOf(s){ return validDate(s) ? +s.slice(5,7) : null; }
+function todayStr(){ var d=new Date(); function p(n){return (n<10?"0":"")+n;} return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
+
+function defaultSettings(){
+  return {
+    bizName:"", ownerName:"",
+    fedRate:12, stateRate:0,
+    mileageRates:{"2024":0.67, "2025":0.70, "2026":0.725},
+    mileageFallback:0.70
+  };
+}
+function blankState(){
+  return { settings: defaultSettings(), income:[], expenses:[], mileage:[], estPayments:{}, meta:{seeded:true, demoCleared:false} };
+}
+function seedDemo(){
+  var st = blankState();
+  var Y = new Date().getFullYear();
+  function D(mo, d){ function p(n){return (n<10?"0":"")+n;} return Y+"-"+p(mo)+"-"+p(d); }
+  st.settings.bizName = "Sample — Bright Pixel Design (demo)";
+  st.settings.ownerName = "Demo Designer";
+  var inc = [
+    [1,12,"Bluebird Coffee Co.",2400,"received","Brand identity package"],
+    [2,3,"Northwind Realty",1800,"received","Listing site redesign"],
+    [3,18,"Bluebird Coffee Co.",2400,"expected","Menu + signage design"],
+    [5,6,"Summit Fitness",3200,"received","App UI project"],
+    [6,22,"Northwind Realty",950,"expected","Landing page"],
+    [8,9,"Summit Fitness",3200,"received","App UI phase 2"],
+    [9,14,"Local Magazine",750,"na","Cover illustration"]
+  ];
+  inc.forEach(function(r){ st.income.push({id:uid(), date:D(r[0],r[1]), payer:r[2], amount:r[3], f1099:r[4], notes:r[5], demo:true}); });
+  var exp = [
+    [1,5,"advertising","Meta Ads",120,"Portfolio promotion"],
+    [2,11,"supplies","Art Supply Co.",86.50,"Paper, ink, markers"],
+    [3,2,"office","Adobe",54.99,"Creative Cloud subscription"],
+    [4,15,"meals","Cafe Luna",64,"Client lunch — Bluebird team"],
+    [5,20,"travel","DesignConf",340,"Conference ticket + hotel"],
+    [6,8,"insurance","Next Insurance",210,"Liability policy"],
+    [7,19,"other","Namecheap",96,"Domains + hosting"],
+    [9,2,"contract","Dev Contractor",500,"Website build help"]
+  ];
+  exp.forEach(function(r){ st.expenses.push({id:uid(), date:D(r[0],r[1]), cat:r[2], vendor:r[3], amount:r[4], notes:r[5], demo:true}); });
+  var mil = [
+    [1,20,46,"Client meeting — Bluebird HQ"],
+    [3,8,112,"DesignConf trip"],
+    [6,15,38,"Northwind office visit"],
+    [9,10,64,"Summit Fitness on-site"]
+  ];
+  mil.forEach(function(r){ st.mileage.push({id:uid(), date:D(r[0],r[1]), miles:r[2], purpose:r[3], demo:true}); });
+  return st;
+}
+
+var state = null;
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function load(){
+  var raw = null;
+  try{ raw = localStorage.getItem(KEY); }catch(e){}
+  if(!raw){ state = seedDemo(); save(); return; }
+  try{
+    var parsed = JSON.parse(raw);
+    state = sanitizeState(parsed);
+    if(!state){ throw new Error("bad shape"); }
+  }catch(e){
+    try{ localStorage.setItem(KEY+".corrupt", raw); }catch(e2){}
+    state = seedDemo(); save();
+  }
+}
+function sanitizeState(p){
+  if(!p || typeof p!=="object") return null;
+  var st = blankState();
+  var s = (p.settings && typeof p.settings==="object") ? p.settings : {};
+  st.settings.bizName = String(s.bizName||"").slice(0,120);
+  st.settings.ownerName = String(s.ownerName||"").slice(0,120);
+  st.settings.fedRate = Math.min(60, Math.max(0, num(s.fedRate==null?12:s.fedRate)));
+  st.settings.stateRate = Math.min(30, Math.max(0, num(s.stateRate==null?0:s.stateRate)));
+  st.settings.mileageFallback = Math.max(0, num(s.mileageFallback==null?0.70:s.mileageFallback));
+  st.settings.mileageRates = {};
+  var mr = (s.mileageRates && typeof s.mileageRates==="object") ? s.mileageRates : {};
+  Object.keys(mr).forEach(function(k){ if(/^\d{4}$/.test(k)){ var v = num(mr[k]); if(v>=0) st.settings.mileageRates[k]=v; } });
+  if(Object.keys(st.settings.mileageRates).length===0) st.settings.mileageRates = defaultSettings().mileageRates;
+  st.income = sanitizeIncome(p.income);
+  st.expenses = sanitizeExpenses(p.expenses);
+  st.mileage = sanitizeMileage(p.mileage);
+  st.estPayments = {};
+  if(p.estPayments && typeof p.estPayments==="object"){
+    Object.keys(p.estPayments).forEach(function(k){ if(/^\d{4}-Q[1-4]$/.test(k)) st.estPayments[k] = amt(p.estPayments[k]); });
+  }
+  st.meta = { seeded:true, demoCleared: !!(p.meta && p.meta.demoCleared) };
+  st.legal = (p.legal && typeof p.legal==="object") ? {termsVersion:String(p.legal.termsVersion||""), acceptedDate:String(p.legal.acceptedDate||""), disclaimerShown:!!p.legal.disclaimerShown} : null;
+  return st;
+}
+function sanitizeIncome(list){
+  if(!Array.isArray(list)) return [];
+  var out=[];
+  list.forEach(function(r){
+    if(!r || !validDate(r.date)) return;
+    var f = ["expected","received","na"].indexOf(r.f1099)>=0 ? r.f1099 : "expected";
+    out.push({ id: String(r.id||uid()), date:r.date, payer:String(r.payer||"").slice(0,120), amount:amt(r.amount), f1099:f, notes:String(r.notes||"").slice(0,300), demo:!!r.demo });
+  });
+  return out;
+}
+function sanitizeExpenses(list){
+  if(!Array.isArray(list)) return [];
+  var out=[];
+  list.forEach(function(r){
+    if(!r || !validDate(r.date)) return;
+    var cat = CATMAP[r.cat] ? r.cat : "other";
+    out.push({ id: String(r.id||uid()), date:r.date, cat:cat, vendor:String(r.vendor||"").slice(0,120), amount:amt(r.amount), notes:String(r.notes||"").slice(0,300), demo:!!r.demo });
+  });
+  return out;
+}
+function sanitizeMileage(list){
+  if(!Array.isArray(list)) return [];
+  var out=[];
+  list.forEach(function(r){
+    if(!r || !validDate(r.date)) return;
+    out.push({ id: String(r.id||uid()), date:r.date, miles:amt(r.miles), purpose:String(r.purpose||"").slice(0,300), demo:!!r.demo });
+  });
+  return out;
+}
+
+/* ---------- computations ---------- */
+function rateForYear(y){
+  var r = state.settings.mileageRates[String(y)];
+  if(typeof r==="number" && isFinite(r)) return r;
+  return state.settings.mileageFallback;
+}
+function deductibleOf(exp){ return CATMAP[exp.cat] && CATMAP[exp.cat].half ? round2(exp.amount*0.5) : exp.amount; }
+function totalsForYear(year){
+  var t = { income:0, byClient:{}, byMonth:[0,0,0,0,0,0,0,0,0,0,0,0], expGross:0, expDed:0, byCat:{}, miles:0, mileageDed:0 };
+  CATS.forEach(function(c){ t.byCat[c.key]={gross:0, ded:0}; });
+  state.income.forEach(function(r){
+    if(yearOf(r.date)!==year) return;
+    t.income = round2(t.income + r.amount);
+    var c = t.byClient[r.payer] || (t.byClient[r.payer]={total:0, count:0, statuses:{}});
+    c.total = round2(c.total + r.amount); c.count++; c.statuses[r.f1099]=true;
+    t.byMonth[monthOf(r.date)-1] = round2(t.byMonth[monthOf(r.date)-1] + r.amount);
+  });
+  state.expenses.forEach(function(r){
+    if(yearOf(r.date)!==year) return;
+    var d = deductibleOf(r);
+    t.expGross = round2(t.expGross + r.amount);
+    t.expDed = round2(t.expDed + d);
+    t.byCat[r.cat].gross = round2(t.byCat[r.cat].gross + r.amount);
+    t.byCat[r.cat].ded = round2(t.byCat[r.cat].ded + d);
+  });
+  state.mileage.forEach(function(r){
+    if(yearOf(r.date)!==year) return;
+    t.miles = round2(t.miles + r.miles);
+  });
+  t.mileageDed = round2(t.miles * rateForYear(year));
+  t.profit = round2(t.income - t.expDed - t.mileageDed);
+  return t;
+}
+function profitThrough(year, endMonth){
+  var inc=0, ded=0, miles=0;
+  state.income.forEach(function(r){ if(yearOf(r.date)===year && monthOf(r.date)<=endMonth) inc+=r.amount; });
+  state.expenses.forEach(function(r){ if(yearOf(r.date)===year && monthOf(r.date)<=endMonth) ded+=deductibleOf(r); });
+  state.mileage.forEach(function(r){ if(yearOf(r.date)===year && monthOf(r.date)<=endMonth) miles+=r.miles; });
+  return round2(inc - ded - miles*rateForYear(year));
+}
+function taxFromProfit(profit){
+  var p = Math.max(0, profit||0);
+  var seBase = p*0.9235;
+  var seTax = seBase*0.153;
+  var half = seTax/2;
+  var fed = Math.max(0, p - half) * (state.settings.fedRate/100);
+  var stTax = p * (state.settings.stateRate/100);
+  var total = seTax + fed + stTax;
+  return { profit:p, seBase:round2(seBase), seTax:round2(seTax), half:round2(half), fed:round2(fed), state:round2(stTax), total:round2(total), quarterly:round2(total/4) };
+}
+function quarterTable(year){
+  var rows=[], prevCum=0;
+  QDEFS.forEach(function(qd){
+    var thru = profitThrough(year, qd.endMonth);
+    var annual = round2(thru * 4 / qd.q);
+    var tax = taxFromProfit(annual);
+    var cumDue = round2(tax.total * qd.q / 4);
+    var suggested = round2(cumDue - prevCum); prevCum = cumDue;
+    var paid = state.estPayments[year+"-Q"+qd.q] || 0;
+    rows.push({ q:qd.q, dueLabel: qd.due + (qd.q===4 ? ", "+(year+1) : ", "+year), thru:thru, annual:annual, cumDue:cumDue, suggested:suggested, paid:paid, balance:round2(suggested-paid) });
+  });
+  return rows;
+}
+
+/* ---------- UI ---------- */
+function $(id){ return document.getElementById(id); }
+var uiYear = new Date().getFullYear();
+function yearsPresent(){
+  var set = {};
+  set[new Date().getFullYear()] = true; set[uiYear] = true;
+  state.income.concat(state.expenses, state.mileage).forEach(function(r){ var y=yearOf(r.date); if(y) set[y]=true; });
+  return Object.keys(set).map(Number).sort(function(a,b){return a-b;});
+}
+function fillYearSel(){
+  var sel = $("yearSel"); sel.innerHTML = "";
+  yearsPresent().forEach(function(y){
+    var o = document.createElement("option"); o.value=y; o.textContent=y; if(y===uiYear) o.selected=true; sel.appendChild(o);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".yrLabel"), function(el){ el.textContent = uiYear; });
+}
+function showTab(name){
+  Array.prototype.forEach.call(document.querySelectorAll("#tabBar button"), function(b){ b.classList.toggle("active", b.getAttribute("data-tab")===name); });
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(s){ s.classList.toggle("active", s.id==="tab-"+name); });
+}
+function sortByDate(list){ return list.slice().sort(function(a,b){ return a.date<b.date?-1:(a.date>b.date?1:0); }); }
+
+function render(){
+  fillYearSel();
+  var t = totalsForYear(uiYear);
+  /* dashboard */
+  $("dashIncome").textContent = fmt(t.income);
+  var payers = Object.keys(t.byClient).length;
+  $("dashIncomeNote").textContent = payers + (payers===1?" client":" clients") + " paid you in " + uiYear;
+  $("dashExpenses").textContent = fmt(round2(t.expDed + t.mileageDed));
+  $("dashMileageDed").textContent = fmt(t.mileageDed);
+  $("dashMileageNote").textContent = t.miles.toLocaleString("en-US") + " business miles × " + fmt(rateForYear(uiYear)) + "/mi";
+  $("dashProfit").textContent = fmt(t.profit);
+  renderNextDue();
+  /* income */
+  var inc = sortByDate(state.income.filter(function(r){ return yearOf(r.date)===uiYear; }));
+  $("incList").innerHTML = inc.length ? inc.map(function(r){
+    var flag = r.f1099==="received" ? '<span class="flag">Received</span>' : (r.f1099==="expected" ? '<span class="flag due">Expected</span>' : '<span class="flag">N/A</span>');
+    return "<tr><td>"+esc(r.date)+"</td><td>"+esc(r.payer)+(r.demo?' <span class="flag">sample</span>':"")+"</td><td>"+flag+"</td><td>"+esc(r.notes)+"</td><td class=\"num\">"+fmt(r.amount)+"</td><td><button class=\"btn small ghost\" data-del-inc=\""+esc(r.id)+"\" type=\"button\">Delete</button></td></tr>";
+  }).join("") : '<tr><td colspan="6" class="muted">No income logged for '+uiYear+' yet.</td></tr>';
+  $("incTotal").textContent = fmt(t.income);
+  var clients = Object.keys(t.byClient).sort(function(a,b){ return t.byClient[b].total - t.byClient[a].total; });
+  $("incByClient").innerHTML = clients.length ? clients.map(function(name){
+    var c = t.byClient[name];
+    var st = c.statuses.received ? "Received" : (c.statuses.expected ? "Still expected" : "N/A");
+    return "<tr><td>"+esc(name)+"</td><td class=\"num\">"+c.count+"</td><td class=\"num\">"+fmt(c.total)+"</td><td>"+esc(st)+"</td></tr>";
+  }).join("") : '<tr><td colspan="4" class="muted">Nothing yet.</td></tr>';
+  $("incByMonth").innerHTML = t.byMonth.map(function(v,i){ return "<tr><td>"+MONTHS[i]+"</td><td class=\"num\">"+fmt(v)+"</td></tr>"; }).join("");
+  /* expenses */
+  var exps = sortByDate(state.expenses.filter(function(r){ return yearOf(r.date)===uiYear; }));
+  $("expList").innerHTML = exps.length ? exps.map(function(r){
+    var c = CATMAP[r.cat];
+    return "<tr><td>"+esc(r.date)+"</td><td>"+esc(c.label)+(c.half?' <span class="flag due">50% rule</span>':"")+"</td><td>"+esc(r.vendor)+(r.demo?' <span class="flag">sample</span>':"")+"</td><td>"+esc(r.notes)+"</td><td class=\"num\">"+fmt(r.amount)+"</td><td class=\"num\">"+fmt(deductibleOf(r))+"</td><td><button class=\"btn small ghost\" data-del-exp=\""+esc(r.id)+"\" type=\"button\">Delete</button></td></tr>";
+  }).join("") : '<tr><td colspan="7" class="muted">No expenses logged for '+uiYear+' yet.</td></tr>';
+  $("expTotalGross").textContent = fmt(t.expGross);
+  $("expTotalDed").textContent = fmt(t.expDed);
+  $("expByCat").innerHTML = CATS.map(function(c){
+    var b = t.byCat[c.key];
+    return "<tr><td>Line "+esc(c.line)+"</td><td>"+esc(c.label)+"</td><td class=\"num\">"+fmt(b.gross)+"</td><td class=\"num\">"+fmt(b.ded)+"</td></tr>";
+  }).join("");
+  /* mileage */
+  var mils = sortByDate(state.mileage.filter(function(r){ return yearOf(r.date)===uiYear; }));
+  var rate = rateForYear(uiYear);
+  $("milList").innerHTML = mils.length ? mils.map(function(r){
+    return "<tr><td>"+esc(r.date)+"</td><td>"+esc(r.purpose)+(r.demo?' <span class="flag">sample</span>':"")+"</td><td class=\"num\">"+r.miles.toLocaleString("en-US")+"</td><td class=\"num\">"+fmt(round2(r.miles*rate))+"</td><td><button class=\"btn small ghost\" data-del-mil=\""+esc(r.id)+"\" type=\"button\">Delete</button></td></tr>";
+  }).join("") : '<tr><td colspan="5" class="muted">No trips logged for '+uiYear+' yet.</td></tr>';
+  $("milTotalMiles").textContent = t.miles.toLocaleString("en-US");
+  $("milTotalDed").textContent = fmt(t.mileageDed);
+  $("milRateInfo").innerHTML = "Deduction rate for "+uiYear+": <b>"+fmt(rate)+" per mile</b> (editable in Settings &amp; Backup — verify against the current IRS standard mileage rate for your year).";
+  renderTax(t);
+  renderReport(t);
+  renderSettings();
+}
+function renderNextDue(){
+  var now = new Date(); var y = now.getFullYear();
+  var rows = quarterTable(y);
+  var dueDates = [new Date(y,3,15), new Date(y,5,15), new Date(y,8,15), new Date(y+1,0,15)];
+  var found = null;
+  for(var i=0;i<4;i++){ if(now <= dueDates[i] && rows[i].balance > 0){ found = {row:rows[i], date:dueDates[i]}; break; } }
+  if(!found){ for(var j=0;j<4;j++){ if(now <= dueDates[j]){ found = {row:rows[j], date:dueDates[j], paidUp:true}; break; } } }
+  if(!found){ $("dashEstDue").textContent = "—"; $("dashEstNote").textContent = "All "+y+" estimate due dates have passed — see Quarterly Tax tab."; return; }
+  var dstr = MONTHS[found.date.getMonth()].slice(0,3)+" "+found.date.getDate()+", "+found.date.getFullYear();
+  if(found.paidUp){ $("dashEstDue").textContent = "Paid up"; $("dashEstNote").textContent = "Q"+found.row.q+" estimate due "+dstr+" is covered. Planning estimate only."; }
+  else { $("dashEstDue").textContent = fmt(found.row.balance)+" by "+dstr; $("dashEstNote").textContent = "Q"+found.row.q+" "+y+" estimated tax (planning estimate — see Quarterly Tax tab)."; }
+}
+function renderTax(t){
+  var tax = taxFromProfit(t.profit);
+  $("taxProfit").textContent = fmt(tax.profit);
+  $("taxSeBase").textContent = fmt(tax.seBase);
+  $("taxSeTax").textContent = fmt(tax.seTax);
+  $("taxHalf").textContent = fmt(tax.half);
+  $("taxFed").textContent = fmt(tax.fed);
+  $("taxState").textContent = fmt(tax.state);
+  $("taxTotal").textContent = fmt(tax.total);
+  $("taxQuarterly").textContent = fmt(tax.quarterly);
+  $("taxFedRateLbl").textContent = state.settings.fedRate;
+  $("taxStateRateLbl").textContent = state.settings.stateRate;
+  var rows = quarterTable(uiYear);
+  $("taxQBody").innerHTML = rows.map(function(r){
+    return "<tr><td>Q"+r.q+"</td><td>"+esc(r.dueLabel)+"</td><td class=\"num\">"+fmt(r.thru)+"</td><td class=\"num\">"+fmt(r.annual)+"</td><td class=\"num\">"+fmt(r.cumDue)+"</td><td class=\"num\">"+fmt(r.suggested)+"</td>"
+      + "<td class=\"num\"><input type=\"number\" step=\"0.01\" min=\"0\" style=\"width:100px;text-align:right\" data-paid-q=\""+r.q+"\" value=\""+(r.paid||"")+"\" placeholder=\"0.00\"></td>"
+      + "<td class=\"num\">"+fmt(r.balance)+"</td></tr>";
+  }).join("");
+}
+function renderReport(t){
+  var lineRows = {};
+  CATS.forEach(function(c){
+    var v = t.byCat[c.key].ded;
+    if(c.key==="car") v = round2(v + t.mileageDed);
+    lineRows[c.line] = round2((lineRows[c.line]||0) + v);
+  });
+  var order = ["8","9","11","15","18","20","21","22","24a","24b","25","27a"];
+  var labels = {"8":"Advertising","9":"Car & truck (incl. mileage)","11":"Contract labor","15":"Insurance","18":"Office expenses","20":"Rent or lease","21":"Repairs & maintenance","22":"Supplies","24a":"Travel","24b":"Meals (50%)","25":"Utilities","27a":"Other expenses"};
+  $("scLines").innerHTML = order.map(function(ln){
+    return "<tr><td>Line "+ln+"</td><td>"+esc(labels[ln])+"</td><td class=\"num\">"+fmt(lineRows[ln]||0)+"</td></tr>";
+  }).join("");
+  $("scGross").textContent = fmt(t.income);
+  $("scMileage").textContent = fmt(t.mileageDed);
+  $("scTotalExp").textContent = fmt(round2(t.expDed + t.mileageDed));
+  $("scNet").textContent = fmt(t.profit);
+  var clients = Object.keys(t.byClient).sort(function(a,b){ return t.byClient[b].total - t.byClient[a].total; });
+  $("scChecklist").innerHTML = clients.length ? clients.map(function(name){
+    var c = t.byClient[name];
+    var st = c.statuses.received ? '<span class="flag">Received</span>' : (c.total>=600 ? '<span class="flag over">Missing — chase it</span>' : '<span class="flag">Under $600 — may not owe one</span>');
+    if(!c.statuses.received && c.statuses.expected && c.total<600) st = '<span class="flag due">Expected</span>';
+    return "<tr><td>"+esc(name)+"</td><td class=\"num\">"+fmt(c.total)+"</td><td>"+st+"</td></tr>";
+  }).join("") : '<tr><td colspan="3" class="muted">No clients yet this year.</td></tr>';
+}
+function renderSettings(){
+  if(document.activeElement && ["setBiz","setOwner","setFed","setState","setMilFallback"].indexOf(document.activeElement.id)>=0) return;
+  $("setBiz").value = state.settings.bizName;
+  $("setOwner").value = state.settings.ownerName;
+  $("setFed").value = state.settings.fedRate;
+  $("setState").value = state.settings.stateRate;
+  $("setMilFallback").value = state.settings.mileageFallback;
+  var years = {};
+  Object.keys(state.settings.mileageRates).forEach(function(k){ years[k]=true; });
+  state.mileage.forEach(function(r){ var y=yearOf(r.date); if(y) years[y]=true; });
+  years[uiYear]=true;
+  $("milRates").innerHTML = Object.keys(years).sort().map(function(y){
+    return '<div class="rowflex" style="margin-bottom:6px"><label style="margin:0;min-width:130px" for="mr-'+y+'">'+y+' rate ($/mile)</label><input inputmode="decimal" type="number" step="0.001" min="0" id="mr-'+y+'" data-rate-year="'+y+'" value="'+rateForYear(+y)+'" style="max-width:140px"></div>';
+  }).join("");
+}
+
+/* ---------- print ---------- */
+function printHTML(title, bodyHTML){
+  $("printSheet").innerHTML = "<h1>"+esc(title)+"</h1>"
+    + "<p>"+esc(state.settings.bizName||"")+(state.settings.ownerName? " — "+esc(state.settings.ownerName):"")+" · Tax year "+uiYear+" · Generated "+esc(todayStr())+"</p>"
+    + bodyHTML
+    + '<p style="margin-top:14px;font-size:11.5px">Planning estimates prepared with SoloBooks 1099 from the owner\'s own logs. Not a tax return and not tax advice — verify with a tax professional.</p>';
+  window.print();
+}
+function printScheduleC(){
+  var t = totalsForYear(uiYear);
+  var rows = $("scLines").innerHTML;
+  printHTML("Schedule C Summary — Profit or Loss From Business (draft)",
+    "<table><tr><td>Line 1 — Gross receipts</td><td class=\"num\">"+fmt(t.income)+"</td></tr></table>"
+    + "<h2>Expenses (deductible amounts)</h2><table><thead><tr><th>Line</th><th>Expense</th><th class=\"num\">Amount</th></tr></thead><tbody>"+rows+"</tbody></table>"
+    + "<table><tr><td><b>Line 28 — Total expenses</b></td><td class=\"num\"><b>"+fmt(round2(t.expDed+t.mileageDed))+"</b></td></tr>"
+    + "<tr><td><b>Line 31 — Net profit</b></td><td class=\"num\"><b>"+fmt(t.profit)+"</b></td></tr></table>"
+    + "<p>Meals at 50%. Mileage: "+t.miles.toLocaleString("en-US")+" miles × "+fmt(rateForYear(uiYear))+"/mi = "+fmt(t.mileageDed)+", included in Line 9.</p>");
+}
+function printTaxSheet(){
+  var t = totalsForYear(uiYear);
+  var tax = taxFromProfit(t.profit);
+  var rows = quarterTable(uiYear).map(function(r){
+    return "<tr><td>Q"+r.q+"</td><td>"+esc(r.dueLabel)+"</td><td class=\"num\">"+fmt(r.thru)+"</td><td class=\"num\">"+fmt(r.annual)+"</td><td class=\"num\">"+fmt(r.cumDue)+"</td><td class=\"num\">"+fmt(r.suggested)+"</td><td class=\"num\">"+fmt(r.paid)+"</td><td class=\"num\">"+fmt(r.balance)+"</td></tr>";
+  }).join("");
+  printHTML("Quarterly Estimated Tax Worksheet — "+uiYear,
+    "<table>"
+    + "<tr><td>Year-to-date net profit</td><td class=\"num\">"+fmt(tax.profit)+"</td></tr>"
+    + "<tr><td>SE tax base (× 92.35%)</td><td class=\"num\">"+fmt(tax.seBase)+"</td></tr>"
+    + "<tr><td>SE tax (× 15.3%)</td><td class=\"num\">"+fmt(tax.seTax)+"</td></tr>"
+    + "<tr><td>Half-SE deduction</td><td class=\"num\">"+fmt(tax.half)+"</td></tr>"
+    + "<tr><td>Federal estimate (× "+state.settings.fedRate+"%)</td><td class=\"num\">"+fmt(tax.fed)+"</td></tr>"
+    + "<tr><td>State estimate (× "+state.settings.stateRate+"%)</td><td class=\"num\">"+fmt(tax.state)+"</td></tr>"
+    + "<tr><td><b>Total estimated tax</b></td><td class=\"num\"><b>"+fmt(tax.total)+"</b></td></tr></table>"
+    + "<h2>Quarters</h2><table><thead><tr><th>Qtr</th><th>Due</th><th class=\"num\">Profit thru</th><th class=\"num\">Annualized</th><th class=\"num\">Cum. due</th><th class=\"num\">Suggested</th><th class=\"num\">Paid</th><th class=\"num\">Balance</th></tr></thead><tbody>"+rows+"</tbody></table>");
+}
+
+/* ---------- events ---------- */
+function setMsg(id, text, ok){ var el=$(id); if(!el) return; el.textContent = text||""; el.className = "msg "+(text?(ok?"ok":"err"):""); }
+function addMonths(dateStr, n){
+  var y=+dateStr.slice(0,4), m=+dateStr.slice(5,7), d=+dateStr.slice(8,10);
+  var nm = m + n; var ny = y + Math.floor((nm-1)/12); nm = ((nm-1)%12)+1;
+  var lastDay = new Date(Date.UTC(ny, nm, 0)).getUTCDate();
+  var nd = Math.min(d, lastDay);
+  function p(x){return (x<10?"0":"")+x;}
+  return ny+"-"+p(nm)+"-"+p(nd);
+}
+function init(){
+  load();
+  /* category select */
+  $("expCat").innerHTML = CATS.map(function(c){ return '<option value="'+c.key+'">Line '+esc(c.line)+" — "+esc(c.label)+"</option>"; }).join("");
+  var today = todayStr();
+  ["incDate","expDate","milDate"].forEach(function(id){ $(id).value = today; });
+  $("tabBar").addEventListener("click", function(e){ var b = e.target.closest("button[data-tab]"); if(b) showTab(b.getAttribute("data-tab")); });
+  $("yearSel").addEventListener("change", function(){ uiYear = +this.value; render(); });
+  /* income */
+  $("incForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var date=$("incDate").value, payer=$("incPayer").value.trim(), amount=num($("incAmount").value);
+    if(!validDate(date)) return setMsg("incMsg","Pick a valid date.");
+    if(!payer) return setMsg("incMsg","Enter the client or payer name.");
+    if(!(amount>0)) return setMsg("incMsg","Enter an amount greater than $0.");
+    state.income.push({id:uid(), date:date, payer:payer.slice(0,120), amount:round2(amount), f1099:$("inc1099").value, notes:$("incNotes").value.trim().slice(0,300), demo:false});
+    uiYear = yearOf(date); save(); render();
+    $("incPayer").value=""; $("incAmount").value=""; $("incNotes").value="";
+    setMsg("incMsg","Income added.", true);
+  });
+  /* expenses */
+  $("expForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var date=$("expDate").value, vendor=$("expVendor").value.trim(), amount=num($("expAmount").value), repeat=parseInt($("expRepeat").value,10)||1;
+    if(!validDate(date)) return setMsg("expMsg","Pick a valid date.");
+    if(!vendor) return setMsg("expMsg","Enter the vendor or payee.");
+    if(!(amount>0)) return setMsg("expMsg","Enter an amount greater than $0.");
+    for(var i=0;i<repeat;i++){
+      state.expenses.push({id:uid(), date: i===0?date:addMonths(date,i), cat:$("expCat").value, vendor:vendor.slice(0,120), amount:round2(amount), notes:$("expNotes").value.trim().slice(0,300), demo:false});
+    }
+    uiYear = yearOf(date); save(); render();
+    $("expVendor").value=""; $("expAmount").value=""; $("expNotes").value=""; $("expRepeat").value="1";
+    setMsg("expMsg", repeat>1 ? ("Expense added × "+repeat+" months.") : "Expense added.", true);
+  });
+  /* mileage */
+  $("milForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var date=$("milDate").value, miles=num($("milMiles").value), purpose=$("milPurpose").value.trim();
+    if(!validDate(date)) return setMsg("milMsg","Pick a valid date.");
+    if(!(miles>0)) return setMsg("milMsg","Enter miles greater than 0.");
+    if(!purpose) return setMsg("milMsg","Enter the trip purpose — the IRS expects a log with a business reason.");
+    state.mileage.push({id:uid(), date:date, miles:round2(miles), purpose:purpose.slice(0,300), demo:false});
+    uiYear = yearOf(date); save(); render();
+    $("milMiles").value=""; $("milPurpose").value="";
+    setMsg("milMsg","Trip added.", true);
+  });
+  /* deletes (event delegation) */
+  document.addEventListener("click", function(e){
+    var di = e.target.closest("[data-del-inc]"), de = e.target.closest("[data-del-exp]"), dm = e.target.closest("[data-del-mil]");
+    if(di){ state.income = state.income.filter(function(r){ return r.id!==di.getAttribute("data-del-inc"); }); save(); render(); }
+    if(de){ state.expenses = state.expenses.filter(function(r){ return r.id!==de.getAttribute("data-del-exp"); }); save(); render(); }
+    if(dm){ state.mileage = state.mileage.filter(function(r){ return r.id!==dm.getAttribute("data-del-mil"); }); save(); render(); }
+  });
+  /* estimated payments */
+  $("taxQBody").addEventListener("change", function(e){
+    var inp = e.target.closest("[data-paid-q]"); if(!inp) return;
+    var q = inp.getAttribute("data-paid-q");
+    state.estPayments[uiYear+"-Q"+q] = amt(inp.value);
+    save(); render();
+    setMsg("taxMsg","Payment recorded for Q"+q+".", true);
+  });
+  $("btnPrintTax").addEventListener("click", printTaxSheet);
+  $("btnPrintSC").addEventListener("click", printScheduleC);
+  /* settings */
+  $("setForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    state.settings.bizName = $("setBiz").value.trim().slice(0,120);
+    state.settings.ownerName = $("setOwner").value.trim().slice(0,120);
+    state.settings.fedRate = Math.min(60, Math.max(0, num($("setFed").value)));
+    state.settings.stateRate = Math.min(30, Math.max(0, num($("setState").value)));
+    state.settings.mileageFallback = Math.max(0, num($("setMilFallback").value));
+    Array.prototype.forEach.call(document.querySelectorAll("[data-rate-year]"), function(inp){
+      var y = inp.getAttribute("data-rate-year"); var v = num(inp.value);
+      if(isFinite(v) && v>=0) state.settings.mileageRates[y] = v;
+    });
+    save(); render();
+    setMsg("setMsg","Settings saved.", true);
+  });
+  /* backup */
+  $("btnExport").addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "solobooks-backup-"+todayStr()+".json";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+    setMsg("importMsg","Backup downloaded.", true);
+  });
+  function doImport(text){
+    if(!text || !String(text).trim()) return setMsg("importMsg","Nothing to import — paste a backup or choose a file.");
+    var parsed;
+    try{ parsed = JSON.parse(text); }catch(e){ return setMsg("importMsg","That isn't valid JSON — the file may be damaged. Nothing was changed."); }
+    var clean = sanitizeState(parsed);
+    if(!clean || (!Array.isArray(parsed.income) && !Array.isArray(parsed.expenses) && !Array.isArray(parsed.mileage))){
+      return setMsg("importMsg","That doesn't look like a SoloBooks backup. Nothing was changed.");
+    }
+    state = clean; save(); render();
+    setMsg("importMsg","Backup imported — "+state.income.length+" income, "+state.expenses.length+" expense, "+state.mileage.length+" mileage records.", true);
+  }
+  $("btnImportText").addEventListener("click", function(){ doImport($("importText").value); });
+  $("importFile").addEventListener("change", function(){
+    var f = this.files && this.files[0]; if(!f) return;
+    var rd = new FileReader();
+    rd.onload = function(){ doImport(String(rd.result||"")); };
+    rd.onerror = function(){ setMsg("importMsg","Couldn't read that file. Nothing was changed."); };
+    rd.readAsText(f);
+    this.value = "";
+  });
+  /* demo / erase */
+  function clearDemo(msgId){
+    var before = state.income.length + state.expenses.length + state.mileage.length;
+    state.income = state.income.filter(function(r){ return !r.demo; });
+    state.expenses = state.expenses.filter(function(r){ return !r.demo; });
+    state.mileage = state.mileage.filter(function(r){ return !r.demo; });
+    state.meta.demoCleared = true;
+    var removed = before - (state.income.length + state.expenses.length + state.mileage.length);
+    save(); render();
+    setMsg(msgId, removed ? ("Removed "+removed+" sample records. Your real entries were kept.") : "No sample records left to remove.", true);
+  }
+  $("btnClearDemo").addEventListener("click", function(){ clearDemo("dataMsg"); });
+  $("btnClearDemoDash").addEventListener("click", function(){ clearDemo("dashMsg"); });
+  $("btnEraseAll").addEventListener("click", function(){
+    if(!window.confirm("Erase ALL SoloBooks data in this browser — income, expenses, mileage, and settings? This cannot be undone.")) return;
+    state = blankState(); state.meta.demoCleared = true;
+    uiYear = new Date().getFullYear();
+    save(); render();
+    setMsg("dataMsg","Everything erased. The app is empty and ready for your real books.", true);
+  });
+  render();
+}
+document.addEventListener("DOMContentLoaded", init);
+
+/* exposed for QA tests */
+window.SB = { get state(){ return state; }, set state(v){ state=v; }, save:save, load:load, totalsForYear:totalsForYear, taxFromProfit:taxFromProfit, quarterTable:quarterTable, profitThrough:profitThrough, rateForYear:rateForYear, deductibleOf:deductibleOf, round2:round2, fmt:fmt, validDate:validDate, sanitizeState:sanitizeState, CATS:CATS, KEY:KEY };
+</script>
+
+<style id="ww-legal-css">
+.ww-legal-overlay{position:fixed;inset:0;z-index:99990;background:rgba(10,12,14,.72);display:flex;align-items:center;justify-content:center;padding:14px;box-sizing:border-box}
+.ww-legal-card{background:#fff;color:#17202a;border-radius:14px;max-width:560px;width:100%;max-height:92vh;overflow:auto;padding:22px 20px;box-sizing:border-box;box-shadow:0 18px 50px rgba(0,0,0,.35);font-family:inherit}
+.ww-legal-card h2{margin:0 0 4px;font-size:22px}
+.ww-legal-card h3{margin:16px 0 6px}
+.ww-legal-sum{font-size:16px;line-height:1.45;margin:12px 0}
+.ww-legal-sum p{margin:6px 0;font-weight:600}
+.ww-legal-note{font-size:13px;color:#445; margin:10px 0}
+.ww-legal-updated{background:#fff3cd;border:1px solid #e3c565;border-radius:8px;padding:8px 10px;font-size:14px;margin:10px 0}
+.ww-legal-btn{display:block;width:100%;min-height:48px;margin:10px 0;padding:12px 14px;font-size:16px;border-radius:10px;border:1px solid #9db2c3;background:#eef4f8;color:#17202a;cursor:pointer;box-sizing:border-box}
+.ww-legal-agree{background:#17603a;border-color:#17603a;color:#fff;font-weight:700}
+.ww-legal-page{position:fixed;inset:0;z-index:99980;background:#fff;color:#17202a;overflow:auto;padding:18px 16px 40px;box-sizing:border-box}
+.ww-legal-page .ww-legal-inner{max-width:680px;margin:0 auto}
+.ww-legal-page h2{font-size:21px}.ww-legal-page h3{font-size:17px;margin-top:18px}.ww-legal-page p,.ww-legal-page li{font-size:14.5px;line-height:1.55}
+.ww-legal-close{min-height:48px;padding:10px 18px;font-size:15px;border-radius:10px;border:1px solid #9db2c3;background:#eef4f8;cursor:pointer}
+.ww-legal-open-btn{min-height:48px}
+.ww-legal-check{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:15px;line-height:1.4;cursor:pointer;text-align:left}
+.ww-legal-check input{width:22px;height:22px;min-width:22px;margin-top:1px;cursor:pointer}
+.ww-legal-agree[disabled]{opacity:.45;cursor:not-allowed}
+[hidden]{display:none !important}
+</style>
+
+<div id="wwLegalOverlay" class="ww-legal-overlay" hidden>
+  <div class="ww-legal-card" role="dialog" aria-modal="true" aria-labelledby="wwLegalTitle">
+    <h2>SoloBooks 1099</h2>
+    <h3 id="wwLegalTitle" style="margin-top:2px">Terms of Use</h3>
+    <div id="wwLegalUpdated" class="ww-legal-updated" hidden>Our terms were updated (v1.0).</div>
+    <div class="ww-legal-sum">
+      <p>Your data stays on your device.</p>
+      <p>Estimates are aids, not guarantees.</p>
+      <p>You're responsible for checking outputs before you rely on them.</p>
+    </div>
+    <p class="ww-legal-note">The full Terms and Disclaimer are one tap away, now and any time in Settings → Legal.</p>
+    <button type="button" class="ww-legal-btn" id="wwLegalReadTerms">Read the full Terms</button>
+    <button type="button" class="ww-legal-btn" id="wwLegalReadDisc">Read the Estimator Disclaimer</button>
+    <label class="ww-legal-check" for="wwLegalCheck"><input type="checkbox" id="wwLegalCheck"><span>I have read the disclaimer and I agree to the Terms of Use</span></label>
+    <button type="button" class="ww-legal-btn ww-legal-agree" id="wwLegalAgree" disabled>I Agree</button>
+  </div>
+</div>
+<div id="wwLegalReader" class="ww-legal-page" hidden>
+  <div class="ww-legal-inner">
+    <button type="button" class="ww-legal-close" id="wwLegalReaderBack">← Back</button>
+    <div id="wwLegalReaderBody"></div>
+  </div>
+</div>
+<div id="wwLegalPage" class="ww-legal-page" hidden>
+  <div class="ww-legal-inner">
+    <button type="button" class="ww-legal-close" id="wwLegalPageClose">← Back</button>
+    <h2>Legal</h2>
+    <h3>Terms of Use</h3>
+    <div id="wwLegalTermsText"><h2>Terms of Use — White Wolf Digital Apps</h2>
+<p><strong>Version 1.0</strong></p>
+<p><strong>Seller: White Wolf Tree Service LLC, selling digital products under the name &quot;White Wolf Digital&quot;</strong></p>
+<p><strong>Contact: whitewolfoklahoma@gmail.com</strong></p>
+<hr>
+<h3>1. What you&#x27;re buying</h3>
+<p>Our apps (including ForgeFit AI, ForgeKitchen, TreeBid Pro, SnowBid,</p>
+<p>WashPrice Pro, RoofSquares, JobProfit Tracker, PastureLedger, and the other</p>
+<p>titles sold under White Wolf Digital) are single-file software tools. When</p>
+<p>you buy one, you are buying a <strong>license to use the file</strong>, not ownership of</p>
+<p>the software itself.</p>
+<h3>2. Your license</h3>
+<ul>
+<li>You may use the app for your own personal or business work.</li>
+<li>You may open it on your own devices (phone, tablet, computer) and move your</li>
+</ul>
+<p>  own data between them using the app&#x27;s built-in backup/export tools.</p>
+<ul>
+<li>You may <strong>not</strong> resell, redistribute, give away, upload, or share the app</li>
+</ul>
+<p>  file (or a copy of it) with anyone else — including posting it online,</p>
+<p>  bundling it with other products, or selling access to it.</p>
+<ul>
+<li>You may <strong>not</strong> claim the app as your own work, remove its branding or</li>
+</ul>
+<p>  notices, or use it to build a competing product for resale.</p>
+<ul>
+<li>One purchase = one buyer. A business purchase covers the buyer and their</li>
+</ul>
+<p>  own employees using it for that business&#x27;s work; it does not cover other</p>
+<p>  businesses.</p>
+<h3>3. Your data stays yours — and stays on your device</h3>
+<ul>
+<li>The current versions of our apps run <strong>entirely on your device</strong>. They have</li>
+</ul>
+<p>  no accounts, no sign-in, no analytics, and they collect, transmit, and store</p>
+<p>  <strong>none</strong> of your information on any server. We never see your data.</p>
+<ul>
+<li>Your records are stored in your browser/app storage on your device. **You</li>
+</ul>
+<p>  are responsible for backing them up** using the app&#x27;s export tools. If you</p>
+<p>  clear your browser data, lose your device, or uninstall the app, your</p>
+<p>  records may be permanently lost, and we cannot recover them — we never had</p>
+<p>  a copy.</p>
+<ul>
+<li>Files you export (backups, quotes, PDFs) are under your control. Where you</li>
+</ul>
+<p>  store or send them is up to you.</p>
+<h3>4. Estimates are tools, not guarantees</h3>
+<p>Every number our apps produce — bids, prices, costs, calorie targets,</p>
+<p>projections, schedules, totals — is an **estimate generated from the</p>
+<p>information you enter and the settings you choose**. Outputs are aids for</p>
+<p>your own judgment, not guarantees of price, profit, outcome, or result. You</p>
+<p>are responsible for checking any output before relying on it (see also the</p>
+<p>disclaimer that applies to your app: Health Disclaimer for fitness/nutrition</p>
+<p>apps, Estimator Disclaimer for contractor tools). If an input is wrong, the</p>
+<p>output will be wrong.</p>
+<h3>5. Acceptable use</h3>
+<p>Don&#x27;t use the apps to break the law, infringe anyone&#x27;s rights, or</p>
+<p>misrepresent quotes, invoices, or records to your own customers. For the</p>
+<p>fitness apps, the guardrails in the app (healthy-rate limits, calorie floor)</p>
+<p>are part of the product — don&#x27;t treat the app as a way around them.</p>
+<h3>6. Provided &quot;as is&quot;</h3>
+<p>The apps are provided **&quot;as is&quot; and &quot;as available,&quot; without warranties of</p>
+<p>any kind**, express or implied — including merchantability, fitness for a</p>
+<p>particular purpose, accuracy of calculations, and uninterrupted or</p>
+<p>error-free operation — to the maximum extent allowed by law. Software has</p>
+<p>bugs; browsers change; we work to fix problems but do not promise any app is</p>
+<p>error-free or will work on every device or browser forever.</p>
+<h3>7. Limitation of liability</h3>
+<p>To the maximum extent allowed by law:</p>
+<ul>
+<li>We are **not liable for indirect, incidental, special, or consequential</li>
+</ul>
+<p>  damages** — including lost profits, lost or mispriced jobs, lost data, or</p>
+<p>  business interruption — arising from use of the apps.</p>
+<ul>
+<li>Our total liability for any claim connected to an app is limited to the</li>
+</ul>
+<p>  <strong>amount you paid for that app</strong>.</p>
+<ul>
+<li>Nothing in these terms limits liability that cannot legally be limited.</li>
+</ul>
+<h3>8. Refunds</h3>
+<p>Refunds are handled **by the storefront you bought from, under that</p>
+<p>storefront&#x27;s policy** — Gumroad&#x27;s refund policy for Gumroad purchases, and</p>
+<p>Google Play&#x27;s refund policy for Play purchases. These terms do not add to,</p>
+<p>replace, or override the storefront&#x27;s refund rules. If a file is defective</p>
+<p>and won&#x27;t open, contact us at whitewolfoklahoma@gmail.com and we&#x27;ll fix or</p>
+<p>replace the file.</p>
+<h3>9. Updates and changes to these terms</h3>
+<ul>
+<li>We may release updated versions of an app. Updates may add, change, or</li>
+</ul>
+<p>  remove features.</p>
+<ul>
+<li>We may update these terms. The version you agreed to is recorded in the</li>
+</ul>
+<p>  app (version number and date) at first-run acceptance. If terms change,</p>
+<p>  the app may ask you to accept the new version once on next open. Updated</p>
+<p>  terms apply going forward, not retroactively.</p>
+<ul>
+<li>If you don&#x27;t agree to an updated version of the terms, stop using the app.</li>
+</ul>
+<h3>10. Governing law</h3>
+<p>These terms are governed by the laws of the <strong>State of Oklahoma</strong>, USA.</p>
+<p>(Attorney to confirm governing law and venue before publication.)</p>
+<h3>11. Contact</h3>
+<p>White Wolf Tree Service LLC (White Wolf Digital) —</p>
+<p>whitewolfoklahoma@gmail.com.</p>
+<hr>
+<h3>CONNECTED FEATURES — takes effect only when these features ship</h3>
+<p>*The sections below apply only to future connected features (device sync via</p>
+<p>Health Connect, AI voice logging, and the AI Goal Preview in ForgeFit). They</p>
+<p>do not apply to the current offline versions, which never transmit data.*</p>
+<ul>
+<li><strong>Opt-in only.</strong> Connected features are off by default. Each one asks for</li>
+</ul>
+<p>  your separate, explicit consent — on its own consent screen, in plain</p>
+<p>  language — before anything leaves your device. Declining never disables</p>
+<p>  the app&#x27;s offline features.</p>
+<ul>
+<li><strong>What gets sent.</strong> Only what the consent screen names, only when you use</li>
+</ul>
+<p>  the feature: for example, a meal description (text, or audio only if cloud</p>
+<p>  transcription is on) for AI voice logging, or the single photo you choose</p>
+<p>  for an AI Goal Preview.</p>
+<ul>
+<li><strong>No retention by us.</strong> Our relay service passes your request to the named</li>
+</ul>
+<p>  AI provider and keeps nothing — no copies of your photos, audio,</p>
+<p>  transcripts, or entries are stored on our servers. Provider handling is</p>
+<p>  described on the consent screen and in the Privacy Policy.</p>
+<ul>
+<li><strong>Health data stays on the device.</strong> Device sync (Health Connect) reads</li>
+</ul>
+<p>  your health data on your phone and stores it in the app on your phone. It</p>
+<p>  is not uploaded to us.</p>
+<ul>
+<li><strong>Allowances.</strong> Some connected features run on third-party AI services we</li>
+</ul>
+<p>  pay for per use, so they may include a monthly allowance described in the</p>
+<p>  app (for example, a set number of AI previews or voice entries per month),</p>
+<p>  with optional additional credits. Allowances and pricing will be shown in</p>
+<p>  the app before you use the feature; they are not a subscription unless the</p>
+<p>  app says so in plain words.</p>
+<ul>
+<li><strong>Permissions.</strong> Connected features may request device permissions (such</li>
+</ul>
+<p>  as Health Connect access or the microphone) at the moment you first use</p>
+<p>  them. You can revoke permissions any time in your device settings; the</p>
+<p>  related feature will simply stop working.</p></div>
+    <h3>Estimator Disclaimer</h3><div id="wwLegalDiscText"><h2>Estimator Disclaimer — Contractor &amp; Trade Tools</h2>
+<p>**Applies to: TreeBid Pro, SnowBid, WashPrice Pro, RoofSquares, JobProfit</p>
+<p>Tracker, FieldForms Toolkit, PaintPro, FenceDeck, MarketMaker, and the other</p>
+<p>estimating/pricing tools sold under White Wolf Digital — including bundles</p>
+<p>that contain them.**</p>
+<h3>Estimating aids, not finished quotes</h3>
+<ul>
+<li>These apps are <strong>estimating and record-keeping aids</strong>. Every bid, price,</li>
+</ul>
+<p>  cost, measurement, and total they produce is an **estimate based on the</p>
+<p>  information and rates you enter**.</p>
+<ul>
+<li>**You — the business owner — are responsible for verifying everything</li>
+</ul>
+<p>  before you quote a customer:** measurements and quantities, site</p>
+<p>  conditions, your current material and labor costs, your rates and margins,</p>
+<p>  taxes, permit and license requirements, disposal rules, and any contract</p>
+<p>  terms.</p>
+<ul>
+<li>Default rates, presets, and sample data included in the apps are starting</li>
+</ul>
+<p>  points only. They are not market prices, not industry standards, and not</p>
+<p>  a recommendation of what you should charge.</p>
+<ul>
+<li>A saved quote keeps the prices in effect when you created it (price</li>
+</ul>
+<p>  snapshot). Changing your presets later does not change saved quotes —</p>
+<p>  and a saved quote is still your responsibility to review before sending.</p>
+<h3>Specific tools</h3>
+<ul>
+<li><strong>TreeBid Pro:</strong> tree work is dangerous and site-specific. Difficulty</li>
+</ul>
+<p>  factors and presets cannot see the actual tree, lean, rot, targets, or</p>
+<p>  access. Inspect every job in person before final pricing. The &quot;Invoice</p>
+<p>  with Wave&quot; feature is an open-and-paste handoff — TreeBid does not</p>
+<p>  connect to Wave, and the invoice you send from Wave is yours.</p>
+<ul>
+<li><strong>RoofSquares / measurement tools:</strong> confirm roof measurements and pitch</li>
+</ul>
+<p>  in person or by your usual method before ordering materials.</p>
+<ul>
+<li><strong>SnowBid / seasonal tools:</strong> route times, snowfall amounts, and service</li>
+</ul>
+<p>  pricing vary by storm and site; seasonal contracts are your agreement</p>
+<p>  with your customer, on your terms.</p>
+<ul>
+<li><strong>JobProfit Tracker:</strong> profit figures depend on the costs you enter.</li>
+</ul>
+<p>  The app is not accounting or tax software and does not replace your</p>
+<p>  bookkeeper or accountant.</p>
+<h3>Bottom line</h3>
+<p>If an output and your judgment disagree, trust your judgment — then fix the</p>
+<p>input. We are not responsible for jobs won, lost, or mispriced based on app</p>
+<p>outputs, within the limits of the Terms of Use.</p></div>
+    <h3>Privacy</h3>
+    <p>This app has no accounts and collects no data. Everything you enter is stored only on this device, in this browser's local storage. Nothing is uploaded, tracked, or shared. Exported backup files are under your control — where you store or send them is up to you. If you clear your browser data, lose your device, or uninstall the app, your records may be permanently lost, so keep backups using the app's export tools.</p>
+    <p id="wwLegalAcceptLine"></p>
+    <p><strong>Sold by White Wolf Tree Service LLC (White Wolf Digital) — whitewolfoklahoma@gmail.com</strong></p>
+  </div>
+</div>
+
+<script>
+/* White Wolf Digital — in-app legal pattern v1 (Terms acceptance + Settings > Legal) */
+const TERMS_VERSION = "1.0";
+(function(){
+  var WW_KEY = "solobooks1099.v1";
+  var WW_SAVE = "save";
+  var WW_DISC = true;
+  function wwRaw(){ try{ var r = localStorage.getItem(WW_KEY); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
+  function wwStateObj(){ try{ if(typeof state !== "undefined" && state && typeof state === "object") return state; }catch(e){} return null; }
+  function wwGetLegal(){
+    var st = wwStateObj(); if(st && st.legal && typeof st.legal === "object") return st.legal;
+    var r = wwRaw(); if(r && r.legal && typeof r.legal === "object") return r.legal;
+    return null;
+  }
+  function wwPersist(rec){
+    var st = wwStateObj();
+    if(st){ st.legal = rec;
+      try{ if(WW_SAVE === "saveState" && typeof saveState === "function"){ saveState(); return; } }catch(e){}
+      try{ if(WW_SAVE === "save" && typeof save === "function"){ save(); return; } }catch(e){}
+    }
+    try{ var r = wwRaw() || {}; r.legal = rec; localStorage.setItem(WW_KEY, JSON.stringify(r)); }catch(e){}
+  }
+  function wwAcceptLine(){
+    var el = document.getElementById("wwLegalAcceptLine"); if(!el) return;
+    var rec = wwGetLegal();
+    if(rec && rec.acceptedDate) el.textContent = "You agreed to Terms v" + (rec.termsVersion || TERMS_VERSION) + " on " + rec.acceptedDate + ".";
+    else el.textContent = "No acceptance recorded yet on this device.";
+  }
+  function wwShowReader(which){
+    var body = document.getElementById("wwLegalReaderBody");
+    var src = document.getElementById(which === "disc" ? "wwLegalDiscText" : "wwLegalTermsText");
+    if(!body || !src) return;
+    body.innerHTML = src.innerHTML;
+    document.getElementById("wwLegalReader").hidden = false;
+  }
+  function wwOpenLegal(){ wwAcceptLine(); document.getElementById("wwLegalPage").hidden = false; }
+  window.__wwOpenLegal = wwOpenLegal;
+  document.addEventListener("click", function(ev){
+    var t = ev.target && ev.target.closest ? ev.target.closest("[data-ww-legal]") : null;
+    if(t){ ev.preventDefault(); wwOpenLegal(); }
+  });
+  var agreeBtn = document.getElementById("wwLegalAgree");
+  var wwCheck = document.getElementById("wwLegalCheck");
+  function wwGate(){ if(agreeBtn && wwCheck) agreeBtn.disabled = !wwCheck.checked; }
+  if(wwCheck) wwCheck.addEventListener("change", wwGate);
+  wwGate();
+  if(agreeBtn) agreeBtn.addEventListener("click", function(){
+    if(wwCheck && !wwCheck.checked){ wwGate(); return; }
+    var rec = { termsVersion: TERMS_VERSION, acceptedDate: new Date().toISOString().slice(0,10), disclaimerShown: WW_DISC };
+    wwPersist(rec);
+    document.getElementById("wwLegalOverlay").hidden = true;
+    wwAcceptLine();
+  });
+  var rt = document.getElementById("wwLegalReadTerms");
+  if(rt) rt.addEventListener("click", function(){ wwShowReader("terms"); });
+  var rd = document.getElementById("wwLegalReadDisc");
+  if(rd) rd.addEventListener("click", function(){ wwShowReader("disc"); });
+  var rb = document.getElementById("wwLegalReaderBack");
+  if(rb) rb.addEventListener("click", function(){ document.getElementById("wwLegalReader").hidden = true; });
+  var pc = document.getElementById("wwLegalPageClose");
+  if(pc) pc.addEventListener("click", function(){ document.getElementById("wwLegalPage").hidden = true; });
+  var rec = wwGetLegal();
+  if(rec && rec.termsVersion === TERMS_VERSION){
+    var st2 = wwStateObj();
+    if(st2 && !st2.legal) wwPersist(rec);
+    wwAcceptLine();
+  } else {
+    if(rec && rec.termsVersion){ var u = document.getElementById("wwLegalUpdated"); if(u) u.hidden = false; }
+    document.getElementById("wwLegalOverlay").hidden = false;
+  }
+})();
+</script>
+
+</body>
+</html>
